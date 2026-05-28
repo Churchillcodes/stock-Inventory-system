@@ -3,7 +3,6 @@ const products = require("../data/products");
 //create product
 const createProduct = (req, res) => {
   const { name, price, quantity } = req.body;
-
   const newProduct = {
     id: Date.now().toString(),
     name,
@@ -12,7 +11,7 @@ const createProduct = (req, res) => {
   };
 
   products.push(newProduct);
-  res.status(201).json(newProduct);
+  res.status(201).json({ message: "Product created successfully", newProduct });
 };
 
 //retrieve all products
@@ -61,9 +60,9 @@ const updateProductById = (req, res) => {
     return res.status(404).json({ message: "Product not found" });
   }
   //Update only the provided fields
-  if (name) product.name = name;
-  if (price) product.price = price;
-  if (quantity) product.quantity = quantity;
+  if (name !== undefined) product.name = name;
+  if (price !== undefined) product.price = price;
+  if (quantity !== undefined) product.quantity = quantity;
   res.status(200).json({ message: "Product updated successfully", product });
 };
 module.exports = {
