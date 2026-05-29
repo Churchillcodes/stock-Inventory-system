@@ -1,4 +1,4 @@
-const validateUpdateProduct = (req, res, next) => {
+const validateUpdatedProduct = (req, res, next) => {
   const { name, price, quantity } = req.body;
 
   // check if at least one field is provided
@@ -45,4 +45,4 @@ const validateUpdateProduct = (req, res, next) => {
   next();
 };
 
-module.exports = validateUpdateProduct;
+module.exports = validateUpdatedProduct;
