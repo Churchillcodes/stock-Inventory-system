@@ -108,6 +108,9 @@ const sellProduct = async (req, res) => {
     //create sale record
     await Sale.create({
       productId: product._id,
+      productName: product.name,
+      priceAtSale: product.price,
+      stockAtSale: product.quantity,
       quantitySold: quantity,
     });
 
