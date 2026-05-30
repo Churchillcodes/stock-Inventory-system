@@ -1,4 +1,5 @@
 const Product = require("../models/product");
+const Sale = require("../models/sale");
 
 //create product
 const createProduct = async (req, res) => {
@@ -102,8 +103,14 @@ const sellProduct = async (req, res) => {
 
     //reduce stock
     product.quantity -= quantity;
-
+    //save product
     await product.save();
+    //create sale record
+    await Sale.create({
+      productId: product._id,
+      quantitySold: quantity,
+    });
+
     res.status(200).json({ message: "Product sold successfully", product });
   } catch (err) {
     res.status(500).json({ message: err.message });
