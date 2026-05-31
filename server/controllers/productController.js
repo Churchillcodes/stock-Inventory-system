@@ -182,6 +182,27 @@ const restockProduct = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+//Get Low stock products
+const getLowStockProducts = async (req, res) => {
+  try {
+    const threshold =
+      req.query.threshold !== undefined ? Number(req.query.threshold) : 5;
+
+    if (isNaN(threshold) || threshold < 0) {
+      return res.status(400).json({
+        message: "Threshold must be a non-negative number",
+      });
+    }
+    const products = await Product.find({
+      quantity: { $lte: threshold },
+    });
+    res.status(200).json(products);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = {
   createProduct,
   getAllProducts,
@@ -190,4 +211,5 @@ module.exports = {
   updateProductById,
   sellProduct,
   restockProduct,
+  getLowStockProducts,
 };
