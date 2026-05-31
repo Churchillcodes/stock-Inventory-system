@@ -55,6 +55,9 @@ const deleteProductById = async (req, res) => {
     }
     res.status(200).json({ message: "Product deleted successfully" });
   } catch (err) {
+    if (err.name === "CastError") {
+      return res.status(400).json({ message: "Invalid ID format" });
+    }
     res.status(500).json({ message: err.message });
   }
 };
@@ -74,6 +77,9 @@ const updateProductById = async (req, res) => {
       .status(200)
       .json({ message: "Product updated successfully", updatedProduct });
   } catch (err) {
+    if (err.name === "CastError") {
+      return res.status(400).json({ message: "Invalid ID format" });
+    }
     res.status(500).json({ message: err.message });
   }
 };
@@ -83,39 +89,47 @@ const sellProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const { quantity } = req.body;
-    //find the product
-    const product = await Product.findById(id);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
 
     //validate product quantity isn't 0 or less
-    if (quantity <= 0) {
+    if (!quantity || quantity <= 0) {
       return res
         .status(400)
         .json({ message: "Quantity must be greater than 0" });
     }
-
-    //check stock availability
-    if (product.quantity < quantity) {
-      return res.status(400).json({ message: "Insufficient stock" });
+    //find the product and update
+    const product = await Product.findOneAndUpdate(
+      {
+        _id: id,
+        quantity: { $gte: quantity },
+      },
+      {
+        $inc: { quantity: -quantity },
+      },
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+    if (!product) {
+      return res
+        .status(400)
+        .json({ message: "Product not found or insufficient stock" });
     }
-
-    //reduce stock
-    product.quantity -= quantity;
-    //save product
-    await product.save();
     //create sale record
     await Sale.create({
       productId: product._id,
       productName: product.name,
       priceAtSale: product.price,
-      stockAtSale: product.quantity,
+      stockAfterSale: product.quantity,
+      stockBeforeSale: product.quantity + quantity,
       quantitySold: quantity,
     });
 
     res.status(200).json({ message: "Product sold successfully", product });
   } catch (err) {
+    if (err.name === "CastError") {
+      return res.status(400).json({ message: "Invalid ID format" });
+    }
     res.status(500).json({ message: err.message });
   }
 };
@@ -124,25 +138,37 @@ const sellProduct = async (req, res) => {
 const restockProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { quantity: addedAmount } = req.body;
-    const product = await Product.findById(id);
-    if (!product) {
-      return res.status(404).json({ message: "product not found" });
-    }
+    const addedAmount = Number(req.body.quantity);
+
     //validate product quantity isn't 0 or less
-    if (addedAmount <= 0) {
+    if (isNaN(addedAmount) || addedAmount <= 0) {
       return res
         .status(400)
         .json({ message: "Restock amount must be greater than 0" });
     }
-    //increase stock
-    product.quantity += addedAmount;
-
-    await product.save();
+    //find and increment
+    const product = await Product.findOneAndUpdate(
+      {
+        _id: id,
+      },
+      {
+        $inc: { quantity: addedAmount },
+      },
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
     res
       .status(200)
       .json({ message: "Product restocked successfully", product });
   } catch (err) {
+    if (err.name === "CastError") {
+      return res.status(400).json({ message: "Invalid ID format" });
+    }
     res.status(500).json({ message: err.message });
   }
 };

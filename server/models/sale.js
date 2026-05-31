@@ -5,6 +5,7 @@ const saleSchema = new mongoose.Schema(
     productId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
+      index: true,
       required: true,
     },
     productName: {
@@ -17,7 +18,12 @@ const saleSchema = new mongoose.Schema(
       required: true,
     },
 
-    stockAtSale: {
+    stockBeforeSale: {
+      type: Number,
+      required: true,
+    },
+
+    stockAfterSale: {
       type: Number,
       required: true,
     },
