@@ -16,6 +16,7 @@ app.use(express.json());
 app.use("/", require("./routes/root"));
 app.use("/products", require("./routes/productRoutes"));
 app.use("/sales", require("./routes/saleRoutes"));
+app.use("/restocks", require("./routes/restockRoutes"));
 
 mongoose.connection.once("open", () => {
   console.log("Connected to MongoDB");

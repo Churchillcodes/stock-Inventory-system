@@ -1,5 +1,6 @@
 const Product = require("../models/product");
 const Sale = require("../models/sale");
+const Restock = require("../models/restock");
 
 //create product
 const createProduct = async (req, res) => {
@@ -162,6 +163,15 @@ const restockProduct = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
+    //restock history snapshots
+    await Restock.create({
+      productId: product._id,
+      productName: product.name,
+      stockBeforeRestock: product.quantity - addedAmount,
+      stockAfterRestock: product.quantity,
+      quantityAdded: addedAmount,
+    });
+
     res
       .status(200)
       .json({ message: "Product restocked successfully", product });
