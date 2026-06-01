@@ -1,4 +1,5 @@
 const Sale = require("../models/sale");
+const Product = require("../models/product");
 
 //get total units sold
 const getTotalUnitsSold = async (req, res) => {
@@ -123,9 +124,61 @@ const getTopSellingProducts = async (req, res) => {
   }
 };
 
+//getting the inventory value
+const getInventoryValue = async (req, res) => {
+  try {
+    const inventoryValue = await Product.aggregate([
+      {
+        $project: {
+          value: {
+            $multiply: ["$price", "$quantity"],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          inventoryValue: {
+            $sum: "$value",
+          },
+        },
+      },
+    ]);
+    res
+      .status(200)
+      .json({ inventoryValue: inventoryValue[0]?.inventoryValue || 0 });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+//getting low stock summary
+const getLowStockSummary = async (req, res) => {
+  try {
+    const threshold =
+      req.query.threshold !== undefined ? Number(req.query.threshold) : 5;
+
+    const totalProducts = await Product.countDocuments();
+
+    const lowStockProducts = await Product.countDocuments({
+      quantity: { $lte: threshold },
+    });
+    res.status(200).json({
+      totalProducts,
+      lowStockProducts,
+      healthyProducts: totalProducts - lowStockProducts,
+      threshold,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = {
   getTotalUnitsSold,
   getTotalRevenue,
   getProductSalesAnalytics,
   getTopSellingProducts,
+  getInventoryValue,
+  getLowStockSummary,
 };

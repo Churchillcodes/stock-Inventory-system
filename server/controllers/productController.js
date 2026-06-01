@@ -97,7 +97,7 @@ const sellProduct = async (req, res) => {
         .status(400)
         .json({ message: "Quantity must be greater than 0" });
     }
-    //find the product and update
+    //find the product and update(making it atomic)
     const product = await Product.findOneAndUpdate(
       {
         _id: id,
@@ -147,7 +147,7 @@ const restockProduct = async (req, res) => {
         .status(400)
         .json({ message: "Restock amount must be greater than 0" });
     }
-    //find and increment
+    //find and increment(make it atomic)
     const product = await Product.findOneAndUpdate(
       {
         _id: id,
